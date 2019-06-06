@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t vvavepacket/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run vvavepacket/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t vvavepacket/multi-client ./client
+  - docker build -t vvavepacket/multi-nginx ./nginx
+  - docker build -t vvavepacket/multi-server ./server
+  - docker build -t vvavepacket/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push vvavepacket/multi-client
+  - docker push vvavepacket/multi-nginx
+  - docker push vvavepacket/multi-server
+  - docker push vvavepacket/multi-worker
